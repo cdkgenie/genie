@@ -1,11 +1,13 @@
-const servicesBaseUrl = "http://localhost:9000/"
+const servicesBaseUrl = "http://c03dfosign693.dslab.ad.adp.com:9000/"
 //const chatbotBaseUrl = "http://localhost:8000/"
 let botId;
 let sessionId = Date.now().toString(36) + Math.random().toString(36).substr(2);
 let startupTasks = []
 let startupTaskNames = []
 let allStartupAndSubTasks = []
-
+let responseLength = 70
+let genieChatBoxContentDiv;
+let responseMap = new Map();
 
 async function loadGenie(genieId, color,cssProps) {
   botId = genieId;
@@ -16,10 +18,10 @@ async function loadGenie(genieId, color,cssProps) {
     document.getElementById('genie').style.setProperty("--chatBoxHeight", cssProps.chatBoxHeight);
   }
 
-  const contentDiv = document.getElementById("genie");
+  genieChatBoxContentDiv = document.getElementById("genie");
   //contentDiv.innerHTML = await fetchHtmlAsText("http://localhost:8000/genie.html");
-  contentDiv.appendChild(createLampButton());
-  contentDiv.appendChild(createChatWindowFrame());
+  genieChatBoxContentDiv.appendChild(createLampButton());
+  genieChatBoxContentDiv.appendChild(createChatWindowFrame());
   await buildStartupTasks(genieId);
 
 }
@@ -152,14 +154,14 @@ async function getStartupTasksAndSubTasks(genieId) {
   return await response.json();
 }*/
 
-function buildStartupTasksDiv(welcomeTaskName, welcomeTasksDiv) {
-  let welcomeTaskDiv = document.createElement('div');
-  welcomeTaskDiv.classList.add('startup-task');
-  welcomeTaskDiv.innerHTML = welcomeTaskName;
-  welcomeTaskDiv.addEventListener('click', function () {
-    processMessage(welcomeTaskName, false);
+function buildStartupTasksDiv(startupTaskName, startupTasksDiv) {
+  let startupTaskDiv = document.createElement('div');
+  startupTaskDiv.classList.add('startup-task');
+  startupTaskDiv.innerHTML = startupTaskName;
+  startupTaskDiv.addEventListener('click', function () {
+    processMessage(startupTaskName, false);
   });
-  welcomeTasksDiv.appendChild(welcomeTaskDiv);
+  startupTasksDiv.appendChild(startupTaskDiv);
 }
 
 async function buildStartupTasks(genieId) {
@@ -260,17 +262,39 @@ async function getBotResponse(userMsg) {
 }
 
 
+const uid = function(){
+  return Date.now().toString(36) + Math.random().toString(36).substr(2);
+}
+
+function truncatedResponse(botResponse){
+  if (botResponse.length > responseLength){
+    let spanId = "spanId_"+uid();
+    responseMap.set(spanId, botResponse);
+    let remainingText = "<span id="+spanId+" onclick='showLongMessage("+spanId+")'>...</span>";
+    return botResponse.substring(0, responseLength) + remainingText;
+  }
+  else{
+    return botResponse;
+
+  }
+}
+
+function showLongMessage(spanId) {
+  let botResponse = responseMap.get(spanId.id);
+  document.getElementById("bot-chat-window").style.opacity = 0.2;
+  genieChatBoxContentDiv.appendChild(modelForRemainingText(botResponse))
+}
+
 function buildBotResponseMessage(botResponse) {
   let botMessageDiv = document.createElement("div");
   botMessageDiv.classList.add("bot-inbox");
   botMessageDiv.classList.add("inbox");
-
   let botMessageHeader = document.createElement("div");
   botMessageHeader.classList.add("msg-header");
   let botMessagePara = document.createElement("p");
-  botMessagePara.innerHTML = botResponse;
-  botMessageHeader.appendChild(botMessagePara)
-  botMessageDiv.appendChild(botMessageHeader)
+  botMessagePara.innerHTML = truncatedResponse(botResponse);
+  botMessageHeader.appendChild(botMessagePara);
+  botMessageDiv.appendChild(botMessageHeader);
   let chatBoxElem = document.getElementById("chat-box");
   if (chatBoxElem) {
     chatBoxElem.appendChild(botMessageDiv);
@@ -348,4 +372,43 @@ function closeModal() {
 }
 function showComments(image, number) {
   image.style.opacity=1;
+}
+
+
+function modelForRemainingText(botResponse){
+  let longResponseModal = document.getElementById("myModal");
+  if(longResponseModal) {
+    longResponseModal.style.display = "block";
+    let modelBody = longResponseModal.getElementsByClassName("modal-body")[0];
+    modelBody.innerText = botResponse;
+    return longResponseModal;
+  }
+  else {
+    let myModel = document.createElement("div");
+    myModel.id = "myModal";
+    myModel.classList.add("modal");
+    let modelContent = document.createElement("div");
+    modelContent.classList.add("modal-content");
+    let modelHeader = document.createElement("div");
+    modelHeader.classList.add("modal-header");
+    let modelBody = document.createElement("div");
+    modelBody.classList.add("modal-body");
+
+    let closeIcon = document.createElement("span");
+    closeIcon.classList.add("close");
+    closeIcon.innerHTML = "&times";
+    closeIcon.addEventListener('click', function () {
+      closeModal();
+    });
+
+    modelBody.innerText = botResponse;
+
+    modelHeader.appendChild(closeIcon);
+    modelContent.appendChild(modelHeader);
+    modelContent.appendChild(modelBody);
+    myModel.appendChild(modelContent);
+    myModel.style.display = "block";
+    return myModel;
+  }
+
 }
