@@ -34,7 +34,7 @@ async function loadGenie(genieId, color,cssProps) {
 
 function createLampButton() {
   let floatingBtn = document.createElement('a');
-  floatingBtn.href = '#';
+  // floatingBtn.href = '#';
   floatingBtn.classList.add('float-btn');
   floatingBtn.addEventListener('click', function () {
     toggleChatWindow();
@@ -67,7 +67,7 @@ function createTitle() {
   titleElem.classList.add('title');
 
   let titleImg = document.createElement('a');
-  titleImg.href = '#';
+  // titleImg.href = '#';
   titleImg.classList.add('header-btn');
 
   let imageElem = document.createElement('img');
@@ -145,7 +145,7 @@ function createTypingMessageFrame() {
 }
 
 async function getStartupTasksAndSubTasks(genieId) {
-  const response = await fetch(servicesBaseUrl + 'tasks/getStartupTasksAndSubTasks?projectId=' + genieId);
+  const response = await fetch(servicesBaseUrl + 'tasks/getStartupTasksAndSubTasks?projectId=' + genieId, {credentials: 'include'});
   return await response.json();
 }
 
@@ -343,12 +343,12 @@ function buildBotResponseWithAdditionalMargin(botResponse, margin) {
 }
 
 async function get(url) {
-  const response = await fetch(servicesBaseUrl + url, {headers: {"projectId": botId}});
+  const response = await fetch(servicesBaseUrl + url, {headers: {"projectId": botId}, credentials: 'include'});
   return await response.text();
 }
 
 async function getJson(url) {
-  const response = await fetch(servicesBaseUrl + url, {headers: {"projectId": botId}});
+  const response = await fetch(servicesBaseUrl + url, {headers: {"projectId": botId}, credentials: 'include'});
   return await response.json();
 }
 
@@ -357,7 +357,8 @@ async function post(url, data) {
     await fetch(servicesBaseUrl + url, {
       method: "POST",
       body: JSON.stringify(data),
-      headers: {"Content-type": "application/json; charset=UTF-8", "projectId": botId}
+      headers: {"Content-type": "application/json; charset=UTF-8", "projectId": botId},
+      credentials: 'include'
     })
   return await response.text();
 }
